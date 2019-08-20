@@ -1,21 +1,19 @@
 package ai.turbochain.ipex.wallet.job;
 
+import java.math.BigDecimal;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.spark.blockchain.rpcclient.BitcoinUtil;
+
 import ai.turbochain.ipex.wallet.config.JsonrpcClient;
 import ai.turbochain.ipex.wallet.entity.Coin;
 import ai.turbochain.ipex.wallet.service.AccountService;
 import ai.turbochain.ipex.wallet.util.AccountReplay;
 
-import com.spark.blockchain.rpcclient.BitcoinUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-
-@Component
+//@Component
 public class CoinCollectJob {
     private Logger logger = LoggerFactory.getLogger(CoinCollectJob.class);
     @Autowired
@@ -25,7 +23,7 @@ public class CoinCollectJob {
     @Autowired
     private Coin coin;
 
-    @Scheduled(cron = "0 0 15 * * *")
+    //@Scheduled(cron = "0 0 15 * * *")
     public void rechargeMinerFee(){
         try {
             AccountReplay accountReplay = new AccountReplay(accountService, 100);

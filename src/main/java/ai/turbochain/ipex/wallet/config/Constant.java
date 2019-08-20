@@ -22,7 +22,7 @@ public class Constant {
 	/**
 	 * usdt的token Id 正式网络usdt=31，测试网络可以用2
 	 */
-	public static final String PROPERTYID_USDT = "2";
+	public static final String PROPERTYID_USDT = "31";
 
 	/**
 	 * 精度
