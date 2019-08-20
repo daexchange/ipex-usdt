@@ -152,9 +152,4 @@ public class JsonrpcClient extends BitcoinRPCClient {
 			return null;
 		}
 	}
-
-	public static  void main(String[] args) throws MalformedURLException {
-		JsonrpcClient client = new JsonrpcClient("http://usdt:usdt123@10.20.31.151:30011/");
-		System.out.println(client.getAddressBalance("mopNdiXA8nV9hbpXxmoC34oeuDgBMne6Ro"));
-	}
 }

@@ -1,11 +1,10 @@
 package ai.turbochain.ipex.wallet.component;
 
-import ai.turbochain.ipex.wallet.config.Constant;
-import ai.turbochain.ipex.wallet.config.JsonrpcClient;
-import ai.turbochain.ipex.wallet.entity.Account;
-import ai.turbochain.ipex.wallet.entity.Coin;
-import ai.turbochain.ipex.wallet.entity.Deposit;
-import ai.turbochain.ipex.wallet.service.AccountService;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +13,11 @@ import org.springframework.stereotype.Component;
 
 import com.spark.blockchain.rpcclient.BitcoinUtil;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import ai.turbochain.ipex.wallet.config.Constant;
+import ai.turbochain.ipex.wallet.config.JsonrpcClient;
+import ai.turbochain.ipex.wallet.entity.Coin;
+import ai.turbochain.ipex.wallet.entity.Deposit;
+import ai.turbochain.ipex.wallet.service.AccountService;
 
 @Component
 public class UsdtWatcher extends Watcher {

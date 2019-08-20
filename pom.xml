@@ -41,7 +41,7 @@
         <dependency>
             <groupId>com.spark.bc</groupId>
             <artifactId>bitcoin-rpc</artifactId>
-        </dependency>
+        </dependency>		
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
