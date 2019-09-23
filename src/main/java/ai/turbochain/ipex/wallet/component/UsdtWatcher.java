@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import ai.turbochain.ipex.wallet.entity.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +16,13 @@ import com.spark.blockchain.rpcclient.BitcoinUtil;
 
 import ai.turbochain.ipex.wallet.config.Constant;
 import ai.turbochain.ipex.wallet.config.JsonrpcClient;
-import ai.turbochain.ipex.wallet.entity.Coin;
 import ai.turbochain.ipex.wallet.entity.Deposit;
 import ai.turbochain.ipex.wallet.service.AccountService;
+
+import ai.turbochain.ipex.wallet.utils.HttpRequest;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 
 @Component
 public class UsdtWatcher extends Watcher {
@@ -37,24 +42,31 @@ public class UsdtWatcher extends Watcher {
 		List<Deposit> deposits = new ArrayList<>();
 		try {
 			for (Long blockHeight = startBlockNumber; blockHeight <= endBlockNumber; blockHeight++) {
-				List<String> list = jsonrpcClient.omniListBlockTransactions(blockHeight);
-				for (String txid : list) {
-					Map<String, Object> map = jsonrpcClient.omniGetTransactions(txid);
-					if (map.get("propertyid") == null)
+				// 获取特定区块的数据
+				String blockStr = HttpRequest.sendGetData(Constant.ACT_BLOCKNO_HEIGHT + blockHeight,"");
+				JSONObject jsonObject = JSONObject.parseObject(blockStr);
+				JSONArray dataArr = jsonObject.getJSONArray("data");
+				for (int i = 0; i < dataArr.size(); i++) {
+					// 根据交易id查询交易的详细信息
+					String txnInfoStr = HttpRequest.sendGetData(Constant.ACT_TRANSACTIONS_BY_TXID + dataArr.get(i), "");
+					JSONObject txnInfo = JSONObject.parseObject(txnInfoStr);
+					JSONObject data = txnInfo.getJSONObject("data");
+					if (StringUtils.isBlank(data.getString("propertyid"))) {
 						continue;
-					String propertyid = map.get("propertyid").toString();
-					String txId = map.get("txid").toString();
-					String address = String.valueOf(map.get("referenceaddress"));
-					Boolean valid = Boolean.parseBoolean(map.get("valid").toString());
+					}
+					String propertyid = data.getString("propertyid");
+					String txId = data.getString("txid");
+					String address = data.getString("referenceaddress");
+					Boolean valid = data.getBoolean("valid");
 					if (propertyid.equals(Constant.PROPERTYID_USDT) && valid) {
 						if (accountService.isAddressExist(address)) {
 							Deposit deposit = new Deposit();
 							deposit.setTxid(txId);
-							deposit.setBlockHash(String.valueOf(map.get("blockhash")));
-							deposit.setAmount(new BigDecimal(map.get("amount").toString()));
+							deposit.setBlockHash(data.getString("blockhash"));
+							deposit.setAmount(data.getBigDecimal("amount"));
+							logger.info("receive usdt {}", address);
 							deposit.setAddress(address);
-							logger.info("receive usdt {}", String.valueOf(map.get("referenceaddress")));
-							deposit.setBlockHeight(Long.valueOf(String.valueOf(map.get("block"))));
+							deposit.setBlockHeight(data.getLong("block"));
 							deposits.add(deposit);
 							afterDeposit(deposit);
 						}
@@ -99,7 +111,11 @@ public class UsdtWatcher extends Watcher {
 			}
 			logger.info("充值USDT转账到withdraw账户:from={},to={},amount={}", deposit.getAddress(), coin.getWithdrawAddress(),
 					deposit.getAmount());
-			rpcClient.omniSend(deposit.getAddress(), coin.getWithdrawAddress(), deposit.getAmount());
+//			rpcClient.omniSend(deposit.getAddress(), coin.getWithdrawAddress(), deposit.getAmount());
+			// 调用转账
+			String url = Constant.ACT_TRANSFER_FROM_ADDRESS + Constant.FORM_ADDRESS_PARAM + deposit.getAddress() + Constant.ADDRESS_PARAM + coin.getWithdrawAddress()
+					+ Constant.AMOUNT_PARAM + deposit.getAmount();
+			HttpRequest.sendGetData(url, "");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -108,7 +124,11 @@ public class UsdtWatcher extends Watcher {
 	@Override
 	public Long getNetworkBlockHeight() {
 		try {
-			return Long.valueOf(jsonrpcClient.getBlockCount());
+			String blockCountStr = HttpRequest.sendGetData(Constant.ACT_BLOCKNO_LATEST, "");
+			JSONObject jsonObject = JSONObject.parseObject(blockCountStr);
+			Long blockCount = jsonObject.getLong("data");
+			return blockCount;
+//			return Long.valueOf(jsonrpcClient.getBlockCount());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
